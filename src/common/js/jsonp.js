@@ -7,6 +7,7 @@ export default function jsonp(url,data,option){
 				resolve(data)
 				
 			}else{
+				console.log('shibai')
 				reject(err)
 				
 			}

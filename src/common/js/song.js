@@ -1,3 +1,6 @@
+import {getLyric} from 'api/song'
+import {ERR_OK} from 'api/config'
+import { Base64 } from 'js-base64'
 export default class Song {
 	constructor({id,mid,singer,name,album,duration,image,url}){
 		this.id = id
@@ -9,7 +12,24 @@ export default class Song {
 		this.image = image
 		this.url = url
 	}
-
+	getLyric() {
+		if(this.lyric){
+			return Promise.resolve(this.lyric)
+		}
+		return new Promise((resolve,reject)=> {
+				getLyric(this.mid).then((res) => {
+					console.log(res)
+			if(res.data.code === ERR_OK){
+				this.lyric =Base64.decode(res.data.lyric) 
+				resolve(this.lyric)
+				console.log(this.lyric)
+			}else{
+				reject('no lyric')
+			}
+		})
+		})
+	
+	}
 }
 
 export function createSong(musicData) {
@@ -17,11 +37,12 @@ export function createSong(musicData) {
 	{
 		id:musicData.songid,
 		mid:musicData.songmid,
+		name:musicData.songname,
 		singer: filterSinger(musicData.singer),
 		album:musicData.albumname,
 		duration:musicData.interval,
 		image:'https://y.gtimg.cn/music/photo_new/T002R300x300M000'+musicData.albummid+'.jpg?max_age=2592000',
-		url:'https:/ /thirdparty.gtimg.com/'+musicData.songid+'.m4a?fromtag=38'
+		url:'http://thirdparty.gtimg.com/C100'+musicData.songid+'.m4a?fromtag=38'
 	}
 		)
 }

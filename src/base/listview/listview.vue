@@ -31,10 +31,11 @@
 </template>
 <script type="text/ecmascript-6">
   import Loading from 'base/loading/loading'
-	
 	import Scroll from 'base/scroll/scroll'
   import {getData} from 'common/js/dom'
+  
   const ANCHOR_HEIGHT = 18
+
 	export default{ 
   created() {
   this.touch = {}
@@ -64,7 +65,11 @@ computed:{
   }
 },
 methods:{
+  refresh() {
+    this.$refs.listview.refresh()
+  },
   selectItem(item) {
+ 
   this.$emit('select',item)
 },
   onShortcutTouchstart(e) {

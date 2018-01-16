@@ -21,3 +21,51 @@ export function getData(el,name,val){
 	}
 
 }
+export  function getClass(tagName,className) //获得标签名为tagName,类名className的元素 
+      { 
+        if(document.getElementsByClassName) //支持这个函数 
+        {    return document.getElementsByClassName(className); 
+        } 
+        else
+        {    var tags=document.getElementsByTagName(tagName);//获取标签 
+          var tagArr=[];//用于返回类名为className的元素 
+          for(var i=0;i < tags.length; i++) 
+          { 
+            if(tags[i].class == className) 
+            { 
+              tagArr[tagArr.length] = tags[i];//保存满足条件的元素 
+            } 
+          } 
+          return tagArr; 
+        } 
+      }
+let elementStyle = document.createElement('div').style
+let vendor = (() => {
+  let transformNames = {
+    webkit: 'webkitTransform',
+    Moz: 'MozTransform',
+    O: 'OTransform',
+    ms: 'msTransform',
+    standard: 'transform'
+  }
+
+  for (let key in transformNames) {
+    if (elementStyle[transformNames[key]] !== undefined) {
+      return key
+    }
+  }
+
+  return false
+})()
+
+export function prefixStyle(style) {
+  if (vendor === false) {
+    return false
+  }
+
+  if (vendor === 'standard') {
+    return style
+  }
+
+  return vendor + style.charAt(0).toUpperCase() + style.substr(1)
+}
