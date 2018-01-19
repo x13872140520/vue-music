@@ -8,6 +8,7 @@ const state = {
 	mode:playMode.random,
 	currentIndex:-1,
 	currentUrl:'',
-	disc:{}
+	disc:{},
+	topList:{}
 }
 export default state

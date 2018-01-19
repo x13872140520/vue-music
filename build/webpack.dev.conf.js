@@ -92,19 +92,26 @@ const devWebpackConfig = merge(baseWebpackConfig, {
               var url = 'https://c.y.qq.com/qzone/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg'
               axios.get(url, {
                   headers: {
-                      referer: 'https://y.qq.com/n/yqq/playlist/'
-                      
+                      referer: 'https://y.qq.com/n/yqq/playlist/'    
                   },
                   params: req.query
               }).then((response) => {
-               
-               res.json(response.data)
+              var ret = response.data
+             
+                if(typeof ret ==='string'){
 
-          }).
-              catch((e) => {
+                  var reg = /^\w+\(({[^()]+})\)$/
+                  var matches = ret.match(reg)
+                 
+                  if(matches){
+                    ret = JSON.parse(matches[1])
+                  }
+                }
+             
+              res.json(ret)
               
-                console.log(e)
-          })
+          }).
+              catch((e) => {console.log(e)})
           })
          
          app.use('/api', apiRoutes)

@@ -1,14 +1,20 @@
 <template>
 	<transition name="slide">
-		<music-list :title="title" :bgImage="bgImage"></music-list>
+		<music-list :title="title" :bgImage="bgImage" :songs="songs"></music-list>
 	</transition>
 </template>
 <script type="text/ecmascript-6">
-	import MusicList from 'components/music-list/music-list'
+	import musicList from 'components/music-list/music-list'
 	import {mapGetters} from 'vuex'
 	import {getSongList} from 'api/recommend'
 	import {ERR_OK} from 'api/config'
+	import {createSong} from 'common/js/song'
 	export default{
+		data() {
+			return {
+				songs:[]
+			}
+		},
 		computed:{
 			title() {
 				return this.disc.song
@@ -25,17 +31,42 @@
 		},
 		methods:{
 			_getSongList() {
-				console.log()
+				if(!this.disc.dissid) {
+					this.$router.push('/recommend')
+					return 
+				}
 				getSongList(this.disc.dissid).then((res) => {
-					console.log(typeof res)
-					if(res.code === ERR_OK){
-						console.log(res)
+					if(typeof res.data === 'object'){
+							if(res.data.code === ERR_OK){
+						this.songs = this._normalizeSongs(res.data.cdlist[0].songlist)
+						
 					}
+					}else if(typeof res.data === 'string'){
+						let songObj = JSON.parse(res.data.substring(13,res.data.length-1))
+						var songList = songObj.cdlist[0].songlist
+						this.songs = this._normalizeSongs(songList)
+						
+					}
+				
 				})
-			}
+			},
+			_normalizeSongs(list) { 
+		let ret = []
+		list.forEach((item) => {
+			
+
+		let musicData = item
+			
+		if(musicData.songid && musicData.albummid){
+		ret.push(createSong(musicData))
+		}
+	})
+	return ret
+	
+}
 		},
 		components:{
-			MusicList
+			musicList
 		}
 	}
 </script>

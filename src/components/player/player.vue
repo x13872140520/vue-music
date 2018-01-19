@@ -166,9 +166,6 @@
       this.touch.percent = Math.abs(width / window.innerWidth)
       this.$refs.lyricList.$el.style.transform= 'translate3d('+width+'px,0,0)'
       this.$refs.middleL.style.opacity = 1-this.touch.percent 
-      console.log(touch.pageX)
-      console.log(width)
-      console.log(this.touch.percent)
     },
     middleTouchEnd() {
       let width
@@ -179,7 +176,7 @@
           opacity = 0
           width =  -window.innerWidth
           this.currentShow ='lyric'
-          console.log('this is >0.1-')
+        
         }else{
           width = 0
         }
@@ -188,13 +185,13 @@
           width = 0
           this.currentShow ='cd'
           opacity = 1
-          console.log('this is width/window.innerWidth <0.9')
+        
 
         }
         else{
         width = -window.innerWidth
         opacity = 0
-        console.log('this is width = window.innerWidth')
+       
       }
       }
        this.$refs.lyricList.$el.style.transform= 'translate3d('+width+'px,0,0)'

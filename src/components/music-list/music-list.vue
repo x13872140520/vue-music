@@ -89,6 +89,7 @@ export default {
   this.scrollY = pos.y
 },
   selectItem(item,index,url) {
+    this.$emit('changeImg',item)
     this.selectPlay({
     list:this.songs,
     index,
@@ -138,7 +139,7 @@ export default {
 </script>
 <style scoped lang="stylus" ref="stylesheet/stylus">
 @import "~common/stylus/variable"
-  @import "~common/stylus/mixin"
+@import "~common/stylus/mixin"
 
   .music-list
     position: fixed
