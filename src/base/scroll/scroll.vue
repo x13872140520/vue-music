@@ -22,7 +22,11 @@
 	listenScroll:{
 	type:Boolean,
 	default:false
-}
+},
+	pullUp:{
+		type:Boolean,
+		default:false
+	}
 },
 	mounted() {
 	setTimeout(() => {
@@ -33,7 +37,8 @@
 },
 	methods:{
 	_initScroll(){
-	if(!this.$refs.wrapper){
+
+			if(!this.$refs.wrapper){
 	return
 }
 	this.scroll = new BScroll(this.$refs.wrapper,{
@@ -46,7 +51,17 @@
 	me.$emit('scroll',pos)
 })
 }
+	if(this.pullUp){
+		this.scroll.on('scrollEnd',()=>{
+		
+			if(this.scroll.y <= (this.scroll.maxScrollY + 50)){
+				this.$emit('scrollToEnd')
+			}
+		})
+	}
 
+		
+	
 },
 	enable(){
 	this.scroll && this.scroll.enable()

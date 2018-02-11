@@ -1,6 +1,6 @@
 <template>
 	<transition name="slide">
-		<music-list @changeImg="changeImg" :title="title" :bgImage="bgImage" :songs="songs"></music-list>
+		<music-list :rank="rank" @changeImg="changeImg" :title="title" :bgImage="bgImage" :songs="songs"></music-list>
 	</transition>
 </template>
 <script type="text/ecmascript-6">
@@ -12,7 +12,8 @@ export default{
 	data() {
 		return{
 			songs:[],
-			imgUrl:''
+			imgUrl:'',
+			rank:true
 		}
 	},
 	computed:{
@@ -41,7 +42,7 @@ export default{
 			}
 			getTopSong(this.topList.id).then((res)=>{
 				this.songs = this._normalizeSongs(res.songlist)
-				
+				console.log(this.songs)
 			})
 		},
 		_normalizeSongs(list) {

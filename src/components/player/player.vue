@@ -56,8 +56,8 @@
           <div class="icon i-right" :class="disableCls">
             <i @click="next" class="icon-next"></i>
           </div>
-          <div class="icon i-right">
-            <i class="icon-not-favorite"></i>
+          <div class="icon i-right" @click="favorite(currentSong)">
+            <i class="icon" :class="checkExist(currentSong)" ></i>
           </div>
         </div>
       </div>
@@ -77,16 +77,17 @@
         <i @click.stop="togglePlaying"  class="icon-mini" :class="miniIcon"></i>
         </progress-circle>
       </div>
-      <div class="control">
+      <div class="control" @click="showPlaylist">
         <i class="icon-playlist"></i>
       </div>
     </div>
     </transition>
+    <playlist ref="playlist"></playlist>
     <audio ref="audio" :src="currentUrl" @canplay="ready" @error="error" @timeupdate="updateTime" @ended="end"></audio>
 	</div>
 </template>
 <script type="text/ecmascript-6">
-  import {mapGetters,mapMutations} from 'vuex'
+  import {mapGetters,mapMutations,mapActions} from 'vuex'
   import {getClass} from 'common/js/dom'
   import ProgressBar from 'base/progress-bar/progress-bar'
   import ProgressCircle from  'base/progress-circle/progress-circle'
@@ -94,8 +95,13 @@
   import {shuffle} from 'common/js/util'
   import Lyric from 'lyric-parser'
   import Scroll from 'base/scroll/scroll'
-
+  import {getSingerPlay} from "api/singer"
+  import {ERR_OK} from "api/config"
+  import Playlist from "components/playlist/playlist"
+  import {playerMixin} from "common/js/mixin"
+  
   export default {
+    mixins:[playerMixin],
   data() {
   return {
   songReady:true ,
@@ -111,9 +117,7 @@
     this.touch = {}
   },
     computed:{
-    iconMode() {
-    return this.mode === playMode.sequence ? 'icon-sequence' : this.mode === playMode.loop ? 'icon-loop' : 'icon-random'
-  },
+  
     disableCls() {
     return this.songReady ? '' :'disable'
   },
@@ -127,10 +131,9 @@
     return this.playing ? 'icon-pause-mini' :'icon-play-mini'
   },
     percent() {
-
      return this.currentTime / this.currentSong.duration
-
   },
+    
     
     ...mapGetters([
     'fullScreen',
@@ -140,11 +143,17 @@
     'playing',
     'currentIndex',
     'mode',
-    'sequenceList'
+    'sequenceList',
+    'favoriteList'
     ])
   },
  
   methods:{
+    
+
+    showPlaylist() {
+      this.$refs.playlist.show()
+    },
     middleTouchStart(e) {
       this.touch.initiated = true
       const touch = e.touches[0]
@@ -198,31 +207,8 @@
        this.$refs.middleL.style.opacity = opacity
     },
 
-  changeMode() {
-  const mode = (this.mode + 1) % 3
-  this.setPlayMode(mode)
-  let list = null
- 
-  if(mode ===playMode.random ) {
-  
-  list = shuffle(this.sequenceList)
-  
-}else{
-  list = this.sequenceList
-}
 
-this.resetCurrentIndex(list)
-this.setPlayList(list)
-},
 
-resetCurrentIndex(list) {
- 
-  let index = list.findIndex((item) => {
-  return item.id === this.currentSong.id
-})
- 
-  this.setCurrentIndex(index)
-},
   onProgressBarChange(percent) {
     let currentTime = this.currentSong.duration * percent
   this.$refs.audio.currentTime = currentTime
@@ -255,20 +241,49 @@ resetCurrentIndex(list) {
 },
   ready() {
   this.songReady = true
+  
+  this.savePlayHistoryAction(this.currentSong)
+
 },
   prev() {
   if(!this.songReady){
   return
 }
-if(this.playList.length ===1){
-  this.loop()
-}else{
-  let length =  getClass('li','item-song').length
-  let index = this.currentIndex-1 
-  if(this.currentIndex-1 < 0){
-    index = length-1
-   }
-  getClass('li','item-song')[index].click()
+  let index =this.currentIndex - 1
+  if(index === -1){
+    index = this.playList.length-1
+  }
+  let song = this.playList[index]
+  getSingerPlay(song).then((res)=>{
+    if(res.code == ERR_OK){
+    let url ='http://dl.stream.qqmusic.qq.com/C400' + song.mid+'.m4a?vkey='+res.data.items[0].vkey+'&guid=504753841&uin=0&fromtag=66'
+    this.setCurrentUrl(url)
+  }
+ })
+  this.setCurrentIndex(index)
+  if(!this.playing){
+    this.togglePlaying()
+  }
+  this.songReady = false
+},
+  next() {
+   if(!this.songReady){
+  return
+}
+  let index =this.currentIndex + 1
+  if(index === this.playList.length){
+    index = 0
+  }
+  let song = this.playList[index]
+  getSingerPlay(song).then((res)=>{
+    if(res.code == ERR_OK){
+    let url ='http://dl.stream.qqmusic.qq.com/C400' + song.mid+'.m4a?vkey='+res.data.items[0].vkey+'&guid=504753841&uin=0&fromtag=66'
+    this.setCurrentUrl(url)
+  }
+ })
+  this.setCurrentIndex(index)
+  if(!this.playing){
+    this.togglePlaying()
   }
   this.songReady = false
 },
@@ -285,23 +300,6 @@ if(this.mode === playMode.loop){
   if(this.currentLyric){
     this.currentLyric.seek(0)
   }
-},
-  next() {
-   if(!this.songReady){
-  return
-}
-  if(this.playList.length ===1){
-    this.loop()
-  }else{
-  let length =  getClass('li','item-song').length
-  let index = this.currentIndex+1 
-  if(this.currentIndex+1 == length){
-    index = 0
- }
-  getClass('li','item-song')[index].click()
-   }
-   this.songReady = false
-
 },
     togglePlaying() {
       this.setPlayingState(!this.playing)
@@ -345,18 +343,29 @@ if(this.mode === playMode.loop){
   setPlayingState:'SET_PLAYING_STATE',
   setPlayMode:"SET_PLAY_MODE",
   setCurrentIndex:"SET_CURRENT_INDEX",
-  setPlayList:"SET_PLAYLIST"
- 
-})
+  setPlayList:"SET_PLAYLIST",
+  setCurrentUrl:"SET_CURRENT_URL"
+}),
+  ...mapActions([
+    'savePlayHistoryAction',
+    'deleteFavoriteAction',
+    'saveFavoriteAction'
+    ])
 },
   watch:{
   currentSong(newSong,oldSong) {
-
+    
+  if(!newSong.id){
+        return
+      }
   if(newSong.id === oldSong.id ) {
   return
 }
   if(this.currentLyric){
     this.currentLyric.stop()
+    this.currentSong = 0
+    this.playingLyric = ''
+    this.currentLineNum = 0
   }
   setTimeout( () => {
   this.getLyric()
@@ -369,12 +378,15 @@ if(this.mode === playMode.loop){
     newPlaying ? audio.play()  : audio.pause() 
     
     
-  }
+  },
+
+
 },
   components:{
   ProgressBar,
   ProgressCircle,
-  Scroll
+  Scroll,
+  Playlist
 }
 }
 </script>

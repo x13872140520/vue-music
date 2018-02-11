@@ -69,7 +69,6 @@ methods:{
     this.$refs.listview.refresh()
   },
   selectItem(item) {
- 
   this.$emit('select',item)
 },
   onShortcutTouchstart(e) {
